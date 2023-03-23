@@ -16,4 +16,5 @@ fi
 # https://medium.com/@kvaps/run-kubernetes-in-lxc-container-f04aa94b6c9c
 mount --make-rshared /
 EOF
+chmod +x /etc/rc.local
 /etc/rc.local
