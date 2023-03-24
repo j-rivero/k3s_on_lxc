@@ -41,7 +41,7 @@ Run the `prepare_lxc.bash` script in this repo to perform the remaining actions
 and install basic packages to continue the process of installing and debugging
 k3s.
 
-## Create server lx3 installation
+## Create server k3s installation
 
 Using the template created above
 
@@ -62,6 +62,22 @@ root@cluster-k3s-server:~# kubectl get nodes
 NAME                 STATUS   ROLES                       AGE     VERSION
 cluster-k3s-server   Ready    control-plane,etcd,master   6m16s   v1.25.7+k3s1
 ```
+
+## Create agent 
+
+### Actions in the server
+
+Some information is needed from the k3s server: IP and token
+```bash
+root@cluster-k3s-server:~# hostname -I | awk '{print $1}'
+(ip)
+root@cluster-k3s-server:~# cat /var/lib/rancher/k3s/server/node-token
+(token)
+```
+
+### Actions in the agent
+
+
 
 ## Links
 
