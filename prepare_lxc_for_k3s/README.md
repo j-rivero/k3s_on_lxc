@@ -77,6 +77,41 @@ root@cluster-k3s-server:~# cat /var/lib/rancher/k3s/server/node-token
 
 ### Actions in the agent
 
+```bash
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=--kubelet-arg=feature-gates=KubeletInUserNamespace=true K3S_URL=https://(ip-from-previous-step):6443 K3S_TOKEN=(token-from-previous-step) sh -
+```
+
+## Troubleshooting
+
+### Failed to set sysctl: open /proc/sys/net/netfilter/nf_conntrack_max: permission denied
+
+This is expected to fail due to problems with `nf_conntrack_max`. Syslog should display the problem.
+```
+grep nf_conntrack_max /var/log/syslog | tail -n 2
+cluster-k3s-agent1 k3s[xx]: time="xxx" level=info msg="Set sysctl 'net/netfilter/nf_conntrack_max' to 786432"
+cluter-k3s-agent1 k3s[xx]: time="xxx" level=error msg="Failed to set sysctl: open /proc/sys/net/netfilter/nf_conntrack_max: permission denied"
+```
+
+Use the 786432 number displayed before:
+
+Back to the **host system**:
+```
+sysctl -w net/netfilter/nf_conntrack_max=786432
+```
+### /proc/sys/vm/overcommit_memory: permission denied
+
+```
+container_manager_linux.go:435] "Updating kernel flag failed (Hint: enable KubeletInUserNamespace feature flag to ignore the error)" err="open /proc/sys/vm/overcommit_memory: permission denied" flag="vm/overcommit_memory"
+```
+
+As suggested, use the `INSTALL_K3S_EXEC=--kubelet-arg=feature-gates=KubeletInUserNamespace=true` flag when installating the server or the agent.
+
+### 
+
+```
+err="failed to apply oom score -999 to PID 460: write /proc/460/oom_score_adj: permission denied"
+
+```
 
 
 ## Links
