@@ -83,36 +83,39 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=--kubelet-arg=feature-gates=Kube
 
 ## Troubleshooting
 
-### Failed to set sysctl: open /proc/sys/net/netfilter/nf_conntrack_max: permission denied
+### /proc/sys/net/netfilter/nf_conntrack_max: permission denied
 
-This is expected to fail due to problems with `nf_conntrack_max`. Syslog should display the problem.
+Fixed in [k8s upstream](https://github.com/k3s-io/k3s/pull/3505).
+
+Seems not to be critical. **Solution: ** syslog should display the problem.
 ```
 grep nf_conntrack_max /var/log/syslog | tail -n 2
 cluster-k3s-agent1 k3s[xx]: time="xxx" level=info msg="Set sysctl 'net/netfilter/nf_conntrack_max' to 786432"
 cluter-k3s-agent1 k3s[xx]: time="xxx" level=error msg="Failed to set sysctl: open /proc/sys/net/netfilter/nf_conntrack_max: permission denied"
 ```
 
-Use the 786432 number displayed before:
+Use the 786432 number displayed in syslog.
 
 Back to the **host system**:
 ```
 sysctl -w net/netfilter/nf_conntrack_max=786432
 ```
+
 ### /proc/sys/vm/overcommit_memory: permission denied
 
 ```
 container_manager_linux.go:435] "Updating kernel flag failed (Hint: enable KubeletInUserNamespace feature flag to ignore the error)" err="open /proc/sys/vm/overcommit_memory: permission denied" flag="vm/overcommit_memory"
 ```
 
-As suggested, use the `INSTALL_K3S_EXEC=--kubelet-arg=feature-gates=KubeletInUserNamespace=true` flag when installating the server or the agent.
+Critical. **Solution**: as suggested, use the `INSTALL_K3S_EXEC=--kubelet-arg=feature-gates=KubeletInUserNamespace=true` flag when installating the server or the agent.
 
-### 
-
-```
-err="failed to apply oom score -999 to PID 460: write /proc/460/oom_score_adj: permission denied"
+### failed to apply oom score -999 to PID 460: write /proc/460/oom_score_adj: permission denied
 
 ```
+460 container_manager_linux.go:505] "Failed to ensure process in container with oom score" err="failed to apply oom score -999 to PID 460: write /proc/460/oom_score_adj: permission denied"
+```
 
+Happen in [unpriviledges containers](https://github.com/lxc/lxd/issues/2994#issuecomment-283759615) and seems not to be critical to connect the agent and the server. A [possible workaround](https://github.com/lxc/lxd/issues/2994) was submitted bug ignored.
 
 ## Links
 
