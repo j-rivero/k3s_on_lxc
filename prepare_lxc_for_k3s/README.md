@@ -4,10 +4,10 @@ Actions in the host and in the LXC container need to be performed
 
 ## System context
 
-Host: Debian Bullseye 11
-Kernel: 5.15.30-2-pve
-Proxmox 7.2.3
-k3s: 
+* Host: Debian Bullseye 11
+* Kernel: 5.15.30-2-pve
+* Proxmox 7.2.3
+* k3s: v1.25.7+k3s1
 
 ## One-time: initial setup in the host
 
@@ -43,8 +43,25 @@ k3s.
 
 ## Create server lx3 installation
 
+Using the template created above
 
-
+```bash
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=" 
+    --kubelet-arg=feature-gates=KubeletInUserNamespace=true\
+    --kube-controller-manager-arg=feature-gates=KubeletInUserNamespace=true\
+    --kube-apiserver-arg=feature-gates=KubeletInUserNamespace=true\
+    --flannel-iface=eth0\
+    --cluster-init\
+    --disable servicelb\
+    --disable traefik
+    --write-kubeconfig-mode '644'" sh -s - 
+```
+Check the result
+```bash
+root@cluster-k3s-server:~# kubectl get nodes
+NAME                 STATUS   ROLES                       AGE     VERSION
+cluster-k3s-server   Ready    control-plane,etcd,master   6m16s   v1.25.7+k3s1
+```
 
 ## Links
 
