@@ -81,7 +81,17 @@ root@cluster-k3s-server:~# cat /var/lib/rancher/k3s/server/node-token
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=--kubelet-arg=feature-gates=KubeletInUserNamespace=true K3S_URL=https://(ip-from-previous-step):6443 K3S_TOKEN=(token-from-previous-step) sh -
 ```
 
-## Troubleshooting
+## Check that server -- agent connection is working
+
+Back in the host, run:
+```
+root@cluster-k3s-server:~# kubectl get nodes
+NAME                 STATUS   ROLES                       AGE   VERSION
+cluster-k3s-agent1   Ready    <none>                      24m   v1.25.7+k3s1
+cluster-k3s-server   Ready    control-plane,etcd,master   62m   v1.25.7+k3s1
+```
+
+## Optional: troubleshooting
 
 ### /proc/sys/net/netfilter/nf_conntrack_max: permission denied
 
