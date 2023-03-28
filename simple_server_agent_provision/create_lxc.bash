@@ -25,24 +25,24 @@ ${DEBUG} && pvesm available
 if [[ ! -f ${VZ_IMAGE} ]]; then
   echo "${VZ_IMAGE} not found in the filesystem"
   exit 1
-if
+fi
 
 source ${SECRETS_FILE}
 
-if [[ ! -z ${LXC_ROOT_PASS} ]]; then
+if [[ -z ${LXC_ROOT_PASS} ]]; then
   echo "LXC_ROOT_PASS is empty. Set it in ${SECRETS_FILE} file"
   exit 1
 fi
 
 VMID_SERVER=${POOL_VMID_STARTS_AT}
-while pct config ${VMID_SERVER} 2> /dev/null
-  VMID_SERVER=$(( $VMID_SERVER + 1 ))
-do
+while pct config ${VMID_SERVER} 2> /dev/null; do
+  VMID_SERVER=$(( VMID_SERVER + 1 ))
+done
 
-VMID_AGENT=$(( ${VMID_SERVER} +1 ))
-while pct config ${VMID__AGENT} 2> /dev/null
-  VMID__AGENT=$(( $VMID__AGENT + 1 ))
-do
+VMID_AGENT=$(( VMID_SERVER +1 ))
+while pct config ${VMID_AGENT} 2> /dev/null; do
+  VMID__AGENT=$(( VMID__AGENT + 1 ))
+done
 
 SERVER_NAME="cluster-k3s-server-${VMID_SERVER}"
 AGENT_NAME="cluser-k3s-agent-${VMID_SERVER}"
@@ -50,18 +50,18 @@ AGENT_NAME="cluser-k3s-agent-${VMID_SERVER}"
 _pct_create() {
   local VMID=${0} HOSTNAME=${1}
 
-  pct create ${VMID} ${VZ_IMAGE} \
+  pct create "${VMID}" "${VZ_IMAGE}" \
     --arch amd64 \
-    --ostype ${OS_TYPE} \
-    --hostname ${HOSTNAME}\
-    --cores ${CORES} \
-    --memory ${RAM} \
+    --ostype "${OS_TYPE}" \
+    --hostname "${HOSTNAME}"\
+    --cores "${CORES}" \
+    --memory "${RAM}" \
     --net0 name=eth0,bridge=vmbr0,firewall=1,ip=dhcp,type=veth \
     --storage local-lvm \
-    --rootfs local-lvm:${DISK_GB} \
+    --rootfs "local-lvm:${DISK_GB}" \
     --unprivileged 1 \
     --features nesting=1 \
-    --password=${LXC_ROOT_PASS} \
+    --password="${LXC_ROOT_PASS}" \
     --swap 0
 
   if [[ $? != 0 ]]; then
@@ -75,23 +75,23 @@ _pct_create() {
     exit 1
   fi
   # Extra lxc configuration not possible in pct create
-  cat <<-EOF >> ${PCT_VM_PATH}
-  lxc.apparmor.profile: unconfined
-  lxc.cap.drop: 
-  lxc.mount.auto: "proc:rw sys:rw"
-  lxc.cgroup2.devices.allow: c 10:200 rwm
-  EOF
-  
-  ${DEBUG} && pct config ${VMID}
+  cat <<-EOF >> "${PCT_VM_PATH}"
+lxc.apparmor.profile: unconfined
+lxc.cap.drop: 
+lxc.mount.auto: "proc:rw sys:rw"
+lxc.cgroup2.devices.allow: c 10:200 rwm
+EOF
+
+  ${DEBUG} && pct config "${VMID}"
 }
 
 _pct_start() {
   local VMID=${0} 
 
-  if [[ ! pct start ${VMID} ]]; then
+  if ! pct start "${VMID}"; then
     echo "Problems starting ${VMID} server. Run debug start:"
-    pct config ${VMID}
-    pct start ${VMID} --debug 
+    pct config "${VMID}"
+    pct start "${VMID}" --debug 
     exit 1
   fi
 }
@@ -99,14 +99,14 @@ _pct_start() {
 _pct_exec() {
   local VMID=${0} CMD=${1} ENABLE_OUTPUT=${2:-false}
 
-  LOG=$(pct exec ${VMID} -- ${CMD})
-  if [[ %? != 0 ]]; then
+  LOG=$(pct exec "${VMID}" -- "${CMD}")
+  if [[ $? != 0 ]]; then
     echo "[ !! ] There was a problem running ${CMD} in ${VMID}"
     echo "${LOG}"
     exit 1
   fi
 
-  [[ {ENABLE_OUTPUT} ]] && echo ${LOG}
+  [[ ${ENABLE_OUTPUT} ]] && echo "${LOG}"
 }
 
 echo "[ S1 ] Building PVE server ${SERVER_NAME}"
@@ -128,4 +128,4 @@ _pct_exec ${VMID_SERVER} "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\"
 
 
 SERVER_IP=$(_pct_exec ${VMID_SERVER} "hostname -I | awk '{print \$1}'" true)
-SERVER_TOKEN=$(_pct_exec ${VMID_SERVER}) "cat /var/lib/rancher/k3s/server/node-token" true)
+SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
