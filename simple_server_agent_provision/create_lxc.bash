@@ -113,6 +113,13 @@ _pct_exec() {
   return 0
 }
 
+_pct_exec_file() {
+  local VMID=${1} FILE_TO_EXEC=${2}
+
+  pct push "${VMID}" "${SCRIPT_DIR}/files/${FILE_TO_EXEC}" "/tmp/${FILE_TO_EXEC}"
+  pct exec -- "/tmp/${FILE_EXEC}"
+}
+
 echo "[ S1 ] Building PVE server ${SERVER_NAME}"
 _pct_create ${VMID_SERVER} ${SERVER_NAME}
 echo "[ S2 ] Starting PVE server"
@@ -120,17 +127,12 @@ _pct_start ${VMID_SERVER}
 echo "[ S3 ] Base packages installation"
 _pct_exec ${VMID_SERVER} "apt-get update"
 _pct_exec ${VMID_SERVER} "apt-get install -y ${BASE_APT_PACKAGES}"
+_pct_exec_file ${VMID_SERVER} "prepare_lxc_for_k3s.bash"
 echo "[ S4 ] Server k3s installation"
-_pct_exec ${VMID_SERVER} "/bin/bash -c \"curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\"
-    --kubelet-arg=feature-gates=KubeletInUserNamespace=true\
-    --kube-controller-manager-arg=feature-gates=KubeletInUserNamespace=true\
-    --kube-apiserver-arg=feature-gates=KubeletInUserNamespace=true\
-    --flannel-iface=eth0\
-    --cluster-init\
-    --disable servicelb\
-    --disable traefik
-    --write-kubeconfig-mode '644'\" sh -s -"\"
+_pct_exec_file ${VMID_SERVER} "install_k3s_server.bash"
 
 
 SERVER_IP=$(_pct_exec ${VMID_SERVER} "hostname -I | awk '{print \$1}'" true)
 SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
+
+
