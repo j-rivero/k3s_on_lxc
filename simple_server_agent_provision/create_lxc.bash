@@ -8,7 +8,7 @@ SCRIPT_DIR="${SCRIPT_DIR%/*}"
 DEBUG=${DEBUG:-false}
 
 # Configuration variables
-SECRETS_FILE="${SCRIPT_DIR}/secret"
+SECRETS_FILE="secret"
 POOL_VMID_STARTS_AT=3000 # _VMID to start looking for free IDS in Proxmox
 # LXC variables
 LXC_DIRECTORY=/etc/pve/lxc
@@ -35,22 +35,22 @@ if [[ -z ${LXC_ROOT_PASS} ]]; then
 fi
 
 VMID_SERVER=${POOL_VMID_STARTS_AT}
-while pct config ${VMID_SERVER} 2> /dev/null; do
+while pct config ${VMID_SERVER} > /dev/null 2> /dev/null; do
   VMID_SERVER=$(( VMID_SERVER + 1 ))
 done
 
 VMID_AGENT=$(( VMID_SERVER +1 ))
-while pct config ${VMID_AGENT} 2> /dev/null; do
-  VMID__AGENT=$(( VMID__AGENT + 1 ))
+while pct config ${VMID_AGENT} > /dev/null 2> /dev/null; do
+  VMID_AGENT=$(( VMID__AGENT + 1 ))
 done
 
 SERVER_NAME="cluster-k3s-server-${VMID_SERVER}"
 AGENT_NAME="cluser-k3s-agent-${VMID_SERVER}"
 
 _pct_create() {
-  local VMID=${0} HOSTNAME=${1}
+  local VMID=${1} HOSTNAME=${2}
 
-  pct create "${VMID}" "${VZ_IMAGE}" \
+  LOG=$(pct create "${VMID}" "${VZ_IMAGE}" \
     --arch amd64 \
     --ostype "${OS_TYPE}" \
     --hostname "${HOSTNAME}"\
@@ -62,10 +62,11 @@ _pct_create() {
     --unprivileged 1 \
     --features nesting=1 \
     --password="${LXC_ROOT_PASS}" \
-    --swap 0
+    --swap 0)
 
   if [[ $? != 0 ]]; then
-    echo "[!!] pvc create command failed. Check above for the error"
+    echo "[!!] pvc create command failed"
+    echo "$LOG"
     exit 1
   fi
 
@@ -77,29 +78,31 @@ _pct_create() {
   # Extra lxc configuration not possible in pct create
   cat <<-EOF >> "${PCT_VM_PATH}"
 lxc.apparmor.profile: unconfined
-lxc.cap.drop: 
+lxc.cap.drop:
 lxc.mount.auto: "proc:rw sys:rw"
 lxc.cgroup2.devices.allow: c 10:200 rwm
 EOF
 
   ${DEBUG} && pct config "${VMID}"
+  return 0
 }
 
 _pct_start() {
-  local VMID=${0} 
+  local VMID=${1}
 
   if ! pct start "${VMID}"; then
     echo "Problems starting ${VMID} server. Run debug start:"
     pct config "${VMID}"
-    pct start "${VMID}" --debug 
+    pct start "${VMID}" --debug
     exit 1
   fi
+  return 0
 }
 
 _pct_exec() {
-  local VMID=${0} CMD=${1} ENABLE_OUTPUT=${2:-false}
+  local VMID=${1} CMD=${2} ENABLE_OUTPUT=${3:-false}
 
-  LOG=$(pct exec "${VMID}" -- "${CMD}")
+  LOG=$(pct exec "${VMID}" -- ${CMD})
   if [[ $? != 0 ]]; then
     echo "[ !! ] There was a problem running ${CMD} in ${VMID}"
     echo "${LOG}"
@@ -107,6 +110,7 @@ _pct_exec() {
   fi
 
   [[ ${ENABLE_OUTPUT} ]] && echo "${LOG}"
+  return 0
 }
 
 echo "[ S1 ] Building PVE server ${SERVER_NAME}"
@@ -114,9 +118,10 @@ _pct_create ${VMID_SERVER} ${SERVER_NAME}
 echo "[ S2 ] Starting PVE server"
 _pct_start ${VMID_SERVER}
 echo "[ S3 ] Base packages installation"
-_pct_exec ${VMID_SERVER} "apt-get update && apt-get install -y ${BASE_APT_PACKAGES}"
+_pct_exec ${VMID_SERVER} "apt-get update"
+_pct_exec ${VMID_SERVER} "apt-get install -y ${BASE_APT_PACKAGES}"
 echo "[ S4 ] Server k3s installation"
-_pct_exec ${VMID_SERVER} "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\" 
+_pct_exec ${VMID_SERVER} "/bin/bash -c \"curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\"
     --kubelet-arg=feature-gates=KubeletInUserNamespace=true\
     --kube-controller-manager-arg=feature-gates=KubeletInUserNamespace=true\
     --kube-apiserver-arg=feature-gates=KubeletInUserNamespace=true\
@@ -124,7 +129,7 @@ _pct_exec ${VMID_SERVER} "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\"
     --cluster-init\
     --disable servicelb\
     --disable traefik
-    --write-kubeconfig-mode '644'\" sh -s -"
+    --write-kubeconfig-mode '644'\" sh -s -"\"
 
 
 SERVER_IP=$(_pct_exec ${VMID_SERVER} "hostname -I | awk '{print \$1}'" true)
