@@ -5,9 +5,11 @@ set -e
 [[ -L ${0} ]] && SCRIPT_DIR=$(readlink ${0}) || SCRIPT_DIR=${0}
 SCRIPT_DIR="${SCRIPT_DIR%/*}"
 
+# -------------------------------------------
+# Configuration variables
+# 
 DEBUG=${DEBUG:-false}
 
-# Configuration variables
 SECRETS_FILE="secret"
 POOL_VMID_STARTS_AT=3000 # _VMID to start looking for free IDS in Proxmox
 # LXC variables
@@ -18,6 +20,7 @@ CORES=8
 RAM=20000
 DISK_GB=40
 BASE_APT_PACKAGES="curl vim net-tools"
+# -------------------------------------------
 
 ${DEBUG} && pveam available
 ${DEBUG} && pvesm available
@@ -33,19 +36,6 @@ if [[ -z ${LXC_ROOT_PASS} ]]; then
   echo "LXC_ROOT_PASS is empty. Set it in ${SECRETS_FILE} file"
   exit 1
 fi
-
-# Defining machines in the cluster
-VMID_SERVER=${POOL_VMID_STARTS_AT}
-while pct config ${VMID_SERVER} > /dev/null 2> /dev/null; do
-  VMID_SERVER=$(( VMID_SERVER + 1 ))
-done
-VMID_AGENT=$(( VMID_SERVER +1 ))
-while pct config ${VMID_AGENT} > /dev/null 2> /dev/null; do
-  VMID_AGENT=$(( VMID_AGENT + 1 ))
-done
-CLUSTER_INSTANCES=()
-CLUSTER_INSTANCES[VMID_SERVER]="cluster-k3s-server-${VMID_SERVER}"
-CLUSTER_INSTANCES[VMID_AGENT]="cluster-k3s-agent-${VMID_SERVER}"
 
 _pct_create() {
   local VMID=${1} HOSTNAME=${2}
@@ -127,20 +117,38 @@ _pct_exec_file() {
   pct exec "${VMID}" -- rm "/tmp/${FILE_TO_EXEC}"
 }
 
-# Base installation for client and server
+
+# -------------------------------------------
+# START THE PROVISIONING
+# -------------------------------------------
+
+# Defining machines in the cluster
+VMID_SERVER=${POOL_VMID_STARTS_AT}
+while pct config ${VMID_SERVER} > /dev/null 2> /dev/null; do
+  VMID_SERVER=$(( VMID_SERVER + 1 ))
+done
+VMID_AGENT=$(( VMID_SERVER +1 ))
+while pct config ${VMID_AGENT} > /dev/null 2> /dev/null; do
+  VMID_AGENT=$(( VMID_AGENT + 1 ))
+done
+CLUSTER_INSTANCES=()
+CLUSTER_INSTANCES[VMID_SERVER]="cluster-k3s-server-${VMID_SERVER}"
+CLUSTER_INSTANCES[VMID_AGENT]="cluster-k3s-agent-${VMID_SERVER}"
+
+# Base installation for all the instances
 for VMID in "${!CLUSTER_INSTANCES[@]}"; do
   HOSTNAME=${CLUSTER_INSTANCES[VMID]}
   echo "[ --- ] Creating instance ${HOSTNAME} with ID ${VMID}"
-  echo "[ * ] Building the PVE instance"
+  echo "[ RUN ] Building the PVE instance"
   _pct_create "${VMID}" "${HOSTNAME}"
-  echo "[ * ] Starting the PVE instance"
+  echo "[ RUN ] Starting the PVE instance"
   _pct_start "${VMID}"
-  echo "[ * ] Base packages installation"
+  echo "[ RUN ] Base packages installation"
   _pct_exec "${VMID}" "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
   _pct_exec "${VMID}" "locale-gen"
   _pct_exec "${VMID}" "apt-get -qq update"
   _pct_exec "${VMID}" "apt-get install -qq -y ${BASE_APT_PACKAGES}"
-  echo "[ * ] Prepare for the k3s installation"
+  echo "[ RUN ] Prepare for the k3s installation"
   _pct_exec_file "${VMID}" "prepare_lxc_for_k3s.bash"
   echo "[ --- ]"
   echo
@@ -150,9 +158,19 @@ done
 echo "[ --- ]"
 echo "[ SERVER ] Install the k3s server"
 _pct_exec_file ${VMID_SERVER} "install_k3s_server.bash"
-echo "[ SERVER ] Check server installation"
+echo -n "[ TEST ] Check server installation"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes 2> /dev/null"
+echo " OK! "
 echo "[ --- ]"
 
 SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
 SERVER_IP=$(_pct_exec ${VMID_SERVER} "ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" true)
+
+# Agent installation
+echo "[ --- ]"
+echo "[ AGENT ] Install the k3s server"
+_pct_exec_file ${VMID_SERVER} "install_k3s_agent.bash ${SERVER_IP} ${SERVER_TOKEN}"
+echo -n "[ TEST ] Check server installation"
+_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes | grep -q ${CLUSTER_INSTANCES[VMID_AGENT]}"
+echo " OK! "
+echo "[ --- ]"
