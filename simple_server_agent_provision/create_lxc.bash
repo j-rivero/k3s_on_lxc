@@ -34,18 +34,18 @@ if [[ -z ${LXC_ROOT_PASS} ]]; then
   exit 1
 fi
 
+# Defining machines in the cluster
 VMID_SERVER=${POOL_VMID_STARTS_AT}
 while pct config ${VMID_SERVER} > /dev/null 2> /dev/null; do
   VMID_SERVER=$(( VMID_SERVER + 1 ))
 done
-
 VMID_AGENT=$(( VMID_SERVER +1 ))
 while pct config ${VMID_AGENT} > /dev/null 2> /dev/null; do
   VMID_AGENT=$(( VMID_AGENT + 1 ))
 done
-
-SERVER_NAME="cluster-k3s-server-${VMID_SERVER}"
-AGENT_NAME="cluser-k3s-agent-${VMID_SERVER}"
+CLUSTER_INSTANCES=()
+CLUSTER_INSTANCES[VMID_SERVER]="cluster-k3s-server-${VMID_SERVER}"
+CLUSTER_INSTANCES[VMID_AGENT]="cluster-k3s-agent-${VMID_SERVER}"
 
 _pct_create() {
   local VMID=${1} HOSTNAME=${2}
@@ -128,24 +128,31 @@ _pct_exec_file() {
 }
 
 # Base installation for client and server
-for VMID in ${VMID_SERVER} ${VMID_AGENT}; do
-  echo "[ S1 ] Building PVE ${ID} instance ${SERVER_NAME}"
-  _pct_create ${VMID} ${SERVER_NAME}
-  echo "[ S2 ] Starting PVE server"
-  _pct_start ${VMID}
-  echo "[ S3 ] Base packages installation"
-  _pct_exec ${VMID} "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
-  _pct_exec ${VMID} "locale-gen"
-  _pct_exec ${VMID} "apt-get -qq update"
-  _pct_exec ${VMID} "apt-get install -qq -y ${BASE_APT_PACKAGES}"
-  echo "[ S4 ] Server k3s installation"
-  _pct_exec_file ${VMID} "prepare_lxc_for_k3s.bash"
+for VMID in "${!CLUSTER_INSTANCES[@]}"; do
+  HOSTNAME=${CLUSTER_INSTANCES[VMID]}
+  echo "[ --- ] Creating instance ${HOSTNAME} with ID ${VMID}"
+  echo "[ * ] Building the PVE instance"
+  _pct_create "${VMID}" "${HOSTNAME}"
+  echo "[ * ] Starting the PVE instance"
+  _pct_start "${VMID}"
+  echo "[ * ] Base packages installation"
+  _pct_exec "${VMID}" "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
+  _pct_exec "${VMID}" "locale-gen"
+  _pct_exec "${VMID}" "apt-get -qq update"
+  _pct_exec "${VMID}" "apt-get install -qq -y ${BASE_APT_PACKAGES}"
+  echo "[ * ] Prepare for the k3s installation"
+  _pct_exec_file "${VMID}" "prepare_lxc_for_k3s.bash"
+  echo "[ --- ]"
+  echo
 done
 
 # Server installation
+echo "[ --- ]"
+echo "[ SERVER ] Install the k3s server"
 _pct_exec_file ${VMID_SERVER} "install_k3s_server.bash"
-echo "[ S5 ] Check server installation"
+echo "[ SERVER ] Check server installation"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes 2> /dev/null"
+echo "[ --- ]"
 
 SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
 SERVER_IP=$(_pct_exec ${VMID_SERVER} "ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" true)
