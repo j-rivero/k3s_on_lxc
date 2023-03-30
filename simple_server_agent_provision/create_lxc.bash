@@ -104,11 +104,11 @@ _pct_exec() {
 }
 
 _pct_exec_file() {
-  local VMID=${1} FILE_TO_EXEC=${2} ERR=false
+  local VMID=${1} FILE_TO_EXEC=${2} ARG1=${3} ARG2=${4} ERR=false
 
   pct push "${VMID}" "files/${FILE_TO_EXEC}" "/tmp/${FILE_TO_EXEC}"
   pct exec "${VMID}" -- chmod +x "/tmp/${FILE_TO_EXEC}"
-  LOG=`pct exec "${VMID}" -- "/tmp/${FILE_TO_EXEC}"` || ERR=true
+  LOG=`pct exec "${VMID}" -- "/tmp/${FILE_TO_EXEC}" "${ARG1}" "${ARG2}"` || ERR=true
   if $ERR; then
     echo "[ !! ] There was a problem running ${FILE_TO_EXEC} in ${VMID}"
     echo "${LOG}"
@@ -145,9 +145,9 @@ for VMID in "${!CLUSTER_INSTANCES[@]}"; do
   _pct_start "${VMID}"
   echo "[ RUN ] Base packages installation"
   _pct_exec "${VMID}" "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
-  _pct_exec "${VMID}" "locale-gen"
+  _pct_exec "${VMID}" "locale-gen > /dev/null"
   _pct_exec "${VMID}" "apt-get -qq update"
-  _pct_exec "${VMID}" "apt-get install -qq -y ${BASE_APT_PACKAGES}"
+  _pct_exec "${VMID}" "apt-get install -qq -o=Dpkg::User-Pty=0 -y ${BASE_APT_PACKAGES} > /dev/null"
   echo "[ RUN ] Prepare for the k3s installation"
   _pct_exec_file "${VMID}" "prepare_lxc_for_k3s.bash"
   echo "[ --- ]"
@@ -159,8 +159,7 @@ echo "[ --- ]"
 echo "[ SERVER ] Install the k3s server"
 _pct_exec_file ${VMID_SERVER} "install_k3s_server.bash"
 echo -n "[ TEST ] Check server installation"
-_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes 2> /dev/null"
-echo " OK! "
+_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes > /dev/null"
 echo "[ --- ]"
 
 SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
@@ -168,9 +167,8 @@ SERVER_IP=$(_pct_exec ${VMID_SERVER} "ifconfig eth0 | sed -En 's/127.0.0.1//;s/.
 
 # Agent installation
 echo "[ --- ]"
-echo "[ AGENT ] Install the k3s server"
-_pct_exec_file ${VMID_SERVER} "install_k3s_agent.bash ${SERVER_IP} ${SERVER_TOKEN}"
+echo "[ AGENT ] Install the k3s agent"
+_pct_exec_file ${VMID_AGENT} "install_k3s_agent.bash" "${SERVER_IP}" "${SERVER_TOKEN}"
 echo -n "[ TEST ] Check server installation"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes | grep -q ${CLUSTER_INSTANCES[VMID_AGENT]}"
-echo " OK! "
 echo "[ --- ]"
