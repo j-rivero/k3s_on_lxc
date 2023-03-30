@@ -67,7 +67,6 @@ _pct_create() {
   fi
   # Extra lxc configuration not possible in pct create
   cat <<-EOF >> "${PCT_VM_PATH}"
-lxc.apparmor.profile: unconfined
 lxc.cap.drop:
 lxc.mount.auto: "proc:rw sys:rw"
 lxc.cgroup2.devices.allow: c 10:200 rwm
