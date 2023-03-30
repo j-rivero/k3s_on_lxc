@@ -127,17 +127,22 @@ _pct_exec_file() {
   pct exec "${VMID}" -- rm "/tmp/${FILE_TO_EXEC}"
 }
 
-echo "[ S1 ] Building PVE server ${SERVER_NAME}"
-_pct_create ${VMID_SERVER} ${SERVER_NAME}
-echo "[ S2 ] Starting PVE server"
-_pct_start ${VMID_SERVER}
-echo "[ S3 ] Base packages installation"
-_pct_exec ${VMID_SERVER} "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
-_pct_exec ${VMID_SERVER} "locale-gen"
-_pct_exec ${VMID_SERVER} "apt-get -qq update"
-_pct_exec ${VMID_SERVER} "apt-get install -qq -y ${BASE_APT_PACKAGES}"
-echo "[ S4 ] Server k3s installation"
-_pct_exec_file ${VMID_SERVER} "prepare_lxc_for_k3s.bash"
+# Base installation for client and server
+for VMID in ${VMID_SERVER} ${VMID_AGENT}; do
+  echo "[ S1 ] Building PVE ${ID} instance ${SERVER_NAME}"
+  _pct_create ${VMID} ${SERVER_NAME}
+  echo "[ S2 ] Starting PVE server"
+  _pct_start ${VMID}
+  echo "[ S3 ] Base packages installation"
+  _pct_exec ${VMID} "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
+  _pct_exec ${VMID} "locale-gen"
+  _pct_exec ${VMID} "apt-get -qq update"
+  _pct_exec ${VMID} "apt-get install -qq -y ${BASE_APT_PACKAGES}"
+  echo "[ S4 ] Server k3s installation"
+  _pct_exec_file ${VMID} "prepare_lxc_for_k3s.bash"
+done
+
+# Server installation
 _pct_exec_file ${VMID_SERVER} "install_k3s_server.bash"
 echo "[ S5 ] Check server installation"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes 2> /dev/null"
