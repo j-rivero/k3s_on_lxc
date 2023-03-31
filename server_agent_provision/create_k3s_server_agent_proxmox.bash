@@ -172,7 +172,7 @@ echo "[ --- ]"
 echo "[ SERVER ] Install harbor"
 _pct_exec_file ${VMID_SERVER} "install_harbor.bash" "1.10.0"
 echo "[ TEST ] Check harbor service"
-_pct_exec_file "/usr/local/bin/kubectl get services | grep -q harbor-portal"
+_pct_exec "/usr/local/bin/kubectl get services | grep -q harbor-portal"
 echo "[ --- ]"
 # kubectl port-forward service/harbor-portal -n default 88:80 --address='0.0.0.0'
 
