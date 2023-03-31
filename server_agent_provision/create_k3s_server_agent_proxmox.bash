@@ -164,7 +164,7 @@ _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes > /dev/null 2>/dev/nu
 echo "[ TEST ] Check helm installation"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/helm version > /dev/null"
 echo "[ SERVER ] Install argo-cd"
-_pct_exec_file ${VMID_SERVER} "install_argocd.bash"
+_pct_exec_file ${VMID_SERVER} "install_argocd.bash" "2.5.0"
 echo "[ TEST ] Check argocd service"
 _pct_exec_file "/usr/local/bin/kubectl get services | grep -q argocd-server"
 echo "[ --- ]"
