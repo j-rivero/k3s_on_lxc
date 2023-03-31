@@ -159,11 +159,16 @@ echo "[ SERVER ] Install the k3s server"
 _pct_exec_file ${VMID_SERVER} "install_k3s_server.bash"
 echo "[ SERVER ] Install the helm package manager"
 _pct_exec_file ${VMID_SERVER} "install_helm.bash"
-echo -n "[ TEST ] Check server installation"
+echo "[ TEST ] Check server installation"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes > /dev/null 2>/dev/null"
-echo -n "[ TEST ] Check helm installation"
+echo "[ TEST ] Check helm installation"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/helm version > /dev/null"
+echo "[ SERVER ] Install argo-cd"
+_pct_exec_file ${VMID_SERVER} "install_argocd.bash"
+echo "[ TEST ] Check argocd service"
+_pct_exec_file "/usr/local/bin/kubectl get services | grep -q argocd-server"
 echo "[ --- ]"
+# kubectl port-forward service/argco-argocd-server -n default 8080:443 --address='0.0.0.0'
 
 SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
 SERVER_IP=$(_pct_exec ${VMID_SERVER} "ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" true)
@@ -175,3 +180,4 @@ _pct_exec_file ${VMID_AGENT} "install_k3s_agent.bash" "${SERVER_IP}" "${SERVER_T
 echo -n "[ TEST ] Check server connection"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes | grep -q ${CLUSTER_INSTANCES[VMID_AGENT]}"
 echo "[ --- ]"
+
