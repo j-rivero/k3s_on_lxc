@@ -169,6 +169,12 @@ echo "[ TEST ] Check argocd service"
 _pct_exec_file "/usr/local/bin/kubectl get services | grep -q argocd-server"
 echo "[ --- ]"
 # kubectl port-forward service/argco-argocd-server -n default 8080:443 --address='0.0.0.0'
+echo "[ SERVER ] Install harbor"
+_pct_exec_file ${VMID_SERVER} "install_harbor.bash" "1.10.0"
+echo "[ TEST ] Check harbor service"
+_pct_exec_file "/usr/local/bin/kubectl get services | grep -q harbor-portal"
+echo "[ --- ]"
+# kubectl port-forward service/harbor-portal -n default 88:80 --address='0.0.0.0'
 
 SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
 SERVER_IP=$(_pct_exec ${VMID_SERVER} "ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" true)
