@@ -13,4 +13,4 @@ if [[ ${ARGOCD_VERSION} ]]; then
   VERSION_STR="--version ${ARGOCD_VERSION}"
 fi
 
-helm install argco argo/argo-cd "${VERSION_STR}"
+helm install argco argo/argo-cd ${VERSION_STR}
