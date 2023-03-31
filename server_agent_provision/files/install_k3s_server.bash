@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=" 
     --kubelet-arg=feature-gates=KubeletInUserNamespace=true\
@@ -12,4 +13,4 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="
 
 mkdir ~/.kube/
 cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-chmod 700 ~/kube/config
+chmod 700 ~/.kube/config
