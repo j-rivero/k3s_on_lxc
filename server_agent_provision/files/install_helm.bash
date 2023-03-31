@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Install script need local bin in the path
+export PATH=$PATH:/usr/local/bin
+
 # Download & install Helm
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 chmod 700 get_helm.sh
