@@ -186,7 +186,7 @@ echo "[ --- ]"
 echo "[ SERVER ] Install prometheus"
 _pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
   "prometheus" \
-  "https://prometheus-community.github.io/helm-charts"
+  "https://prometheus-community.github.io/helm-charts" \
   "20.2.1" # LTS not in the repo, use latest chart 20.2.1 is promethus v2.43.0
 echo "[ TEST ] Check promethus service"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q prometheus"
