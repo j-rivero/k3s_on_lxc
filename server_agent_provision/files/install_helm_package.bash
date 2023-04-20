@@ -18,7 +18,7 @@ helm repo add "${helm_package}" "${helm_repository_url}"
 helm repo update
 
 if [[ ${version} ]]; then
-  version_str="--version ${version}"
+  version_str=(--version "${version}")
 fi
 
-helm install "${helm_package}" "${helm_repository_name}" "${version_str}"
+helm install "${helm_package}" "${helm_repository_name}" "${version_str[@]}"
