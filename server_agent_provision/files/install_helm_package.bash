@@ -12,7 +12,7 @@ helm_repository_name=${helm_package}/${helm_package}
 version=${3}
 
 # install script need local bin in the path
-export path=$path:/usr/local/bin
+export PATH=$PATH:/usr/local/bin
 
 helm repo add "${helm_package}" "${helm_repository_url}"
 helm repo update
