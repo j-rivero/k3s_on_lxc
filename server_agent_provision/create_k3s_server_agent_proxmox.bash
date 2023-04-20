@@ -7,7 +7,7 @@ SCRIPT_DIR="${SCRIPT_DIR%/*}"
 
 # -------------------------------------------
 # Configuration variables
-# 
+#
 DEBUG=${DEBUG:-false}
 
 SECRETS_FILE="secret"
@@ -60,7 +60,7 @@ _pct_create() {
     exit 1
   fi
 
-  PCT_VM_PATH="${LXC_DIRECTORY}/${VMID}.conf"
+ PCT_VM_PATH="${LXC_DIRECTORY}/${VMID}.conf"
   if [[ ! -f ${PCT_VM_PATH} ]]; then
     echo "${PCT_VM_PATH} not found for then configuration of ${VMID}"
     exit 1
@@ -167,7 +167,7 @@ echo "[ SERVER ] Install argo-cd"
 _pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
   "argo-cd" \
   "https://argoproj.github.io/argo-helm" \
-  "2.5.0"
+  "5.19.15"  # chart version 5.19.15 is argo v2.5.10
 echo "[ TEST ] Check argocd service"
 _pct_exec_file "/usr/local/bin/kubectl get services | grep -q argocd-server"
 echo "[ --- ]"
@@ -176,7 +176,7 @@ echo "[ SERVER ] Install harbor"
 _pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
    "harbor" \
    "https://helm.goharbor.io" \
-   "1.10.0"
+   "1.3.18"  # chart version 1.3.18 is harbor 1.10.17
 echo "[ TEST ] Check harbor service"
 _pct_exec "/usr/local/bin/kubectl get services | grep -q harbor-portal"
 echo "[ --- ]"
@@ -185,7 +185,7 @@ echo "[ SERVER ] Install prometheus"
 _pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
   "prometheus" \
   "https://prometheus-community.github.io/helm-charts"
-  "2.37.6" # LTS
+  "20.2.1" # LTS not in the repo, use latest chart 20.2.1 is promethus v2.43.0
 echo "[ TEST ] Check promethus service"
 _pct_exec_file "/usr/local/bin/kubectl get services | grep -q prometheus"
 echo "[ --- ]"
