@@ -181,6 +181,14 @@ echo "[ TEST ] Check harbor service"
 _pct_exec "/usr/local/bin/kubectl get services | grep -q harbor-portal"
 echo "[ --- ]"
 # kubectl port-forward service/harbor-portal -n default 88:80 --address='0.0.0.0'
+echo "[ SERVER ] Install prometheus"
+_pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
+  "prometheus" \
+  "https://prometheus-community.github.io/helm-charts"
+  "2.37.6" # LTS
+echo "[ TEST ] Check promethus service"
+_pct_exec_file "/usr/local/bin/kubectl get services | grep -q prometheus"
+echo "[ --- ]"
 
 SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
 SERVER_IP=$(_pct_exec ${VMID_SERVER} "ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" true)
