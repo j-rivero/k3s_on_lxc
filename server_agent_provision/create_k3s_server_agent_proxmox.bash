@@ -169,7 +169,7 @@ _pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
   "https://argoproj.github.io/argo-helm" \
   "5.19.15"  # chart version 5.19.15 is argo v2.5.10
 echo "[ TEST ] Check argocd service"
-_pct_exec "/usr/local/bin/kubectl get services | grep -q argocd-server"
+_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q argocd-server"
 echo "[ --- ]"
 # kubectl port-forward service/argco-argocd-server -n default 8080:443 --address='0.0.0.0'
 echo "[ SERVER ] Install harbor"
