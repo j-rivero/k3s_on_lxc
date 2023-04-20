@@ -103,11 +103,11 @@ _pct_exec() {
 }
 
 _pct_exec_file() {
-  local VMID=${1} FILE_TO_EXEC=${2} ARG1=${3} ARG2=${4} ERR=false
+  local VMID=${1} FILE_TO_EXEC=${2} ARG1=${3} ARG2=${4} ARG3=${5} ERR=false
 
   pct push "${VMID}" "files/${FILE_TO_EXEC}" "/tmp/${FILE_TO_EXEC}"
   pct exec "${VMID}" -- chmod +x "/tmp/${FILE_TO_EXEC}"
-  LOG=`pct exec "${VMID}" -- "/tmp/${FILE_TO_EXEC}" "${ARG1}" "${ARG2}"` || ERR=true
+  LOG=`pct exec "${VMID}" -- "/tmp/${FILE_TO_EXEC}" "${ARG1}" "${ARG2}" "${ARG3}"` || ERR=true
   if $ERR; then
     echo "[ !! ] There was a problem running ${FILE_TO_EXEC} in ${VMID}"
     echo "${LOG}"
@@ -164,13 +164,19 @@ _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes > /dev/null 2>/dev/nu
 echo "[ TEST ] Check helm installation"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/helm version > /dev/null"
 echo "[ SERVER ] Install argo-cd"
-_pct_exec_file ${VMID_SERVER} "install_argocd.bash" "2.5.0"
+_pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
+  "argo-cd" \
+  "https://argoproj.github.io/argo-helm" \
+  "2.5.0"
 echo "[ TEST ] Check argocd service"
 _pct_exec_file "/usr/local/bin/kubectl get services | grep -q argocd-server"
 echo "[ --- ]"
 # kubectl port-forward service/argco-argocd-server -n default 8080:443 --address='0.0.0.0'
 echo "[ SERVER ] Install harbor"
-_pct_exec_file ${VMID_SERVER} "install_harbor.bash" "1.10.0"
+_pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
+   "harbor" \
+   "https://helm.goharbor.io" \
+   "1.10.0"
 echo "[ TEST ] Check harbor service"
 _pct_exec "/usr/local/bin/kubectl get services | grep -q harbor-portal"
 echo "[ --- ]"
