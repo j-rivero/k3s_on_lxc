@@ -8,6 +8,7 @@ fi
 
 helm_package=${1}
 helm_repository_url=${2}
+helm_repository_name=${helm_package}/${helm_package}
 version=${3}
 
 # install script need local bin in the path
@@ -20,4 +21,4 @@ if [[ ${version} ]]; then
   version_str=(--version "${version}")
 fi
 
-helm install "${helm_package}/${helm_package}" "${version_str[@]}"
+helm install "${helm_package}" "${helm_repository_name}" "${version_str[@]}"
