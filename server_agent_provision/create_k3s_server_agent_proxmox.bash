@@ -210,4 +210,11 @@ _pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
   "20.2.1" # LTS not in the repo, use latest chart 20.2.1 is promethus v2.43.0
 echo "[ TEST ] Check promethus service"
 _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q prometheus"
+echo "[ SERVER ] Install grafana"
+_pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
+  "graphana" \
+  "https://grafana.github.io/helm-charts/" \
+  "6.54.0" # Chart version for 6.54.0 is app version 9.4.7
+echo "[ TEST ] Check promethus service"
+_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q graphana"
 echo "[ --- ]"
