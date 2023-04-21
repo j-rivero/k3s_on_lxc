@@ -139,28 +139,27 @@ CLUSTER_INSTANCES=()
 CLUSTER_INSTANCES[VMID_SERVER]="cluster-k3s-server-${VMID_SERVER}"
 CLUSTER_INSTANCES[VMID_AGENT]="cluster-k3s-agent-${VMID_SERVER}"
 
-# Base installation for all the instances
-for VMID in "${!CLUSTER_INSTANCES[@]}"; do
-  HOSTNAME=${CLUSTER_INSTANCES[VMID]}
-  echo "[ --- ] Creating instance ${HOSTNAME} with ID ${VMID}"
-  echo "[ RUN ] Building the PVE instance"
-  _pct_create "${VMID}" "${HOSTNAME}"
-  echo "[ RUN ] Starting the PVE instance"
-  _pct_start "${VMID}"
-  echo "[ RUN ] Base packages installation"
-  _pct_exec "${VMID}" "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
-  _pct_exec "${VMID}" "locale-gen > /dev/null 2> /dev/null"
-  _pct_exec "${VMID}" "apt-get -qq update"
-  _pct_exec "${VMID}" "apt-get install -qq -o=Dpkg::User-Pty=0 -y ${BASE_APT_PACKAGES} > /dev/null"
-  echo "[ RUN ] Prepare for the k3s installation"
-  _pct_exec_file "${VMID}" "prepare_lxc_for_k3s.bash"
-  echo "[ --- ]"
-  echo
-done
-
-# Server installation
-echo "[ --- ]"
 if [[ ${USE_EXISTING_VMID} -eq 0 ]]; then
+  # Base installation for all the instances
+  for VMID in "${!CLUSTER_INSTANCES[@]}"; do
+    HOSTNAME=${CLUSTER_INSTANCES[VMID]}
+    echo "[ --- ] Creating instance ${HOSTNAME} with ID ${VMID}"
+    echo "[ RUN ] Building the PVE instance"
+    _pct_create "${VMID}" "${HOSTNAME}"
+    echo "[ RUN ] Starting the PVE instance"
+    _pct_start "${VMID}"
+    echo "[ RUN ] Base packages installation"
+    _pct_exec "${VMID}" "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
+    _pct_exec "${VMID}" "locale-gen > /dev/null 2> /dev/null"
+    _pct_exec "${VMID}" "apt-get -qq update"
+    _pct_exec "${VMID}" "apt-get install -qq -o=Dpkg::User-Pty=0 -y ${BASE_APT_PACKAGES} > /dev/null"
+    echo "[ RUN ] Prepare for the k3s installation"
+    _pct_exec_file "${VMID}" "prepare_lxc_for_k3s.bash"
+    echo "[ --- ]"
+    echo
+  done
+  # Server installation
+  echo "[ --- ]"
   echo "[ SERVER ] Install the k3s server"
   _pct_exec_file ${VMID_SERVER} "install_k3s_server.bash"
   echo "[ SERVER ] Install the helm package manager"
@@ -181,7 +180,7 @@ if [[ ${USE_EXISTING_VMID} -eq 0 ]]; then
   _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes | grep -q ${CLUSTER_INSTANCES[VMID_AGENT]}"
   echo "[ --- ]"
 else
-  echo "[ SERVER ] Reusing server ${VMID_SERVER} and agent ${VMID_AGENT}"
+  echo "[ --- ] Reusing server ${VMID_SERVER} and agent ${VMID_AGENT}"
 fi
 
 echo "[ SERVER ] Install argo-cd"
