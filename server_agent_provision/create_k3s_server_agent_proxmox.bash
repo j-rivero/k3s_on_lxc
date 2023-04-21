@@ -7,7 +7,7 @@ SCRIPT_DIR="${SCRIPT_DIR%/*}"
 
 # -------------------------------------------
 # Configuration variables
-# 
+#
 DEBUG=${DEBUG:-false}
 
 SECRETS_FILE="secret"
@@ -60,7 +60,7 @@ _pct_create() {
     exit 1
   fi
 
-  PCT_VM_PATH="${LXC_DIRECTORY}/${VMID}.conf"
+ PCT_VM_PATH="${LXC_DIRECTORY}/${VMID}.conf"
   if [[ ! -f ${PCT_VM_PATH} ]]; then
     echo "${PCT_VM_PATH} not found for then configuration of ${VMID}"
     exit 1
@@ -167,20 +167,30 @@ echo "[ SERVER ] Install argo-cd"
 _pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
   "argo-cd" \
   "https://argoproj.github.io/argo-helm" \
-  "2.5.0"
+  "5.19.15"  # chart version 5.19.15 is argo v2.5.10
 echo "[ TEST ] Check argocd service"
-_pct_exec_file "/usr/local/bin/kubectl get services | grep -q argocd-server"
+_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q argocd-server"
 echo "[ --- ]"
 # kubectl port-forward service/argco-argocd-server -n default 8080:443 --address='0.0.0.0'
 echo "[ SERVER ] Install harbor"
+# chart version 1.3.18 is harbor 1.10.17 the required in specs. However, all versions under
+# 1.6.0 fail to install on helm. 1.6.0 is harbor 2.2.0
 _pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
    "harbor" \
    "https://helm.goharbor.io" \
-   "1.10.0"
+   "1.6.0"
 echo "[ TEST ] Check harbor service"
-_pct_exec "/usr/local/bin/kubectl get services | grep -q harbor-portal"
+_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q harbor-portal"
 echo "[ --- ]"
 # kubectl port-forward service/harbor-portal -n default 88:80 --address='0.0.0.0'
+echo "[ SERVER ] Install prometheus"
+_pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
+  "prometheus" \
+  "https://prometheus-community.github.io/helm-charts" \
+  "20.2.1" # LTS not in the repo, use latest chart 20.2.1 is promethus v2.43.0
+echo "[ TEST ] Check promethus service"
+_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q prometheus"
+echo "[ --- ]"
 
 SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
 SERVER_IP=$(_pct_exec ${VMID_SERVER} "ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" true)
