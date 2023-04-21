@@ -21,4 +21,8 @@ if [[ ${version} ]]; then
   version_str=(--version "${version}")
 fi
 
+if helm list --filter "${helm_package}"; then
+  helm uninstall "${helm_package}"
+fi
+
 helm install "${helm_package}" "${helm_repository_name}" "${version_str[@]}"
