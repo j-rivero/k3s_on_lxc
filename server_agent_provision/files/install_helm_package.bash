@@ -21,7 +21,9 @@ if [[ ${version} ]]; then
   version_str=(--version "${version}")
 fi
 
-if helm list --filter "${helm_package}"; then
+# Ugly but no other way https://github.com/helm/helm/issues/2655
+status=$(helm status "${helm_package}" 2>&1)
+if [[ "$status" != "Error: release: not found" ]]; then
   helm uninstall "${helm_package}"
 fi
 
