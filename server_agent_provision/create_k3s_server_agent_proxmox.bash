@@ -9,7 +9,7 @@ SCRIPT_DIR="${SCRIPT_DIR%/*}"
 # Configuration variables
 #
 DEBUG=${DEBUG:-false}
-USE_EXISTING_VMID=${0:-USE_EXISTING_VMID}
+USE_EXISTING_VMID=${USE_EXISTING_VMID:-0}
 
 
 SECRETS_FILE="secret"
