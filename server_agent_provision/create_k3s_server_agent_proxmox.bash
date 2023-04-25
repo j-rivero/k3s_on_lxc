@@ -6,22 +6,11 @@ set -e
 SCRIPT_DIR="${SCRIPT_DIR%/*}"
 
 # -------------------------------------------
-# Configuration variables
+# Useful variables
 #
 DEBUG=${DEBUG:-false}
-USE_EXISTING_VMID=${USE_EXISTING_VMID:-0}
+source "${SCRIPT_DIR}/config.bash"
 
-
-SECRETS_FILE="secret"
-POOL_VMID_STARTS_AT=3000 # _VMID to start looking for free IDS in Proxmox
-# LXC variables
-LXC_DIRECTORY=/etc/pve/lxc
-VZ_IMAGE=/var/lib/vz/template/cache/ubuntu-22.04-standard_22.04-1_amd64.tar.zst
-OS_TYPE=ubuntu
-CORES=8
-RAM=20000
-DISK_GB=40
-BASE_APT_PACKAGES="curl vim net-tools"
 # -------------------------------------------
 
 ${DEBUG} && pveam available
