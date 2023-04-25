@@ -1,0 +1,17 @@
+# File defining the Helm package to be installed in the Server. 
+# Format of the file is:
+# package name | helm repo url | version | service to check after installation
+# comments and white lines are ignored.
+
+# chart version 5.19.15 is argo v2.5.10
+argo-cd https://argoproj.github.io/argo-helm 5.19.15 argocd-server
+
+# chart version 1.3.18 is harbor 1.10.17 the required in specs. However, all versions under
+# 1.6.0 fail to install on helm. 1.6.0 is harbor 2.2.0
+harbor https://helm.goharbor.io 1.6.0 harbor-portal
+
+# LTS not in the repo, use latest chart 20.2.1 is promethus v2.43.0
+prometheus https://prometheus-community.github.io/helm-charts 20.2.1 prometheus
+
+# Chart version for 6.54.0 is app version 9.4.7
+grafana https://grafana.github.io/helm-charts 6.54.0 grafana 

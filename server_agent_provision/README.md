@@ -25,6 +25,14 @@ of HELM packages:
 USE_EXISTING_VMID=100 ./create_k3s_server_agent_proxmox.bash
 ```
 
+## Configuration
+
 Variables to customize the creation are stored in the [config file](config.bash)
 with descriptions. They control the ID assignation in Proxmox and the
 specs of the LXC machines to create.
+
+### Helm packages in the server
+
+For installing helm packages inside the server, the plain text configuration
+file [`server_helm_packages`](server_helm_packages) can be used. The format
+is described in the file.
