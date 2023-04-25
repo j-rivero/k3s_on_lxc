@@ -10,7 +10,7 @@ export SECRETS_FILE="secret.bash"
 export USE_EXISTING_VMID=${USE_EXISTING_VMID:-0}
 # VMID (LXC internal ID in proxmox) to start looking for free IDS in Proxmox to create
 # server and agent. Not used if USE_EXISTING_VMID was supplied.
-export POOL_VMID_STARTS_AT=3000 
+export POOL_VMID_STARTS_AT=${POOL_VMID_STARTS_AT:-100}
 
 # LXC creation variables. Configuration is being shared between
 # agent and server.
