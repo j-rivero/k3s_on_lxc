@@ -2,8 +2,7 @@
 
 set -e
 
-[[ -L ${0} ]] && SCRIPT_DIR=$(readlink ${0}) || SCRIPT_DIR=${0}
-SCRIPT_DIR="${SCRIPT_DIR%/*}"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # -------------------------------------------
 # Useful variables
