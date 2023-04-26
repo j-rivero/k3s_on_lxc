@@ -130,7 +130,7 @@ _install_helm_packages() {
                 version \
                 service_to_check
   do
-    _echo "[ SERVER ] Install ${package_name}"
+    echo "[ SERVER ] Install ${package_name}"
     _pct_exec_file "${VMID}" "install_helm_package.bash" \
       "${package_name}" \
       "${helm_repo_url}" \
