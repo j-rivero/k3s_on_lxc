@@ -2,14 +2,14 @@
 
 set -e
 
-[[ -L ${0} ]] && SCRIPT_DIR=$(readlink ${0}) || SCRIPT_DIR=${0}
-SCRIPT_DIR="${SCRIPT_DIR%/*}"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # -------------------------------------------
 # Useful variables
 #
 DEBUG=${DEBUG:-false}
 source "${SCRIPT_DIR}/config.bash"
+HELM_PACKAGES_CONFIG_PATH="${SCRIPT_DIR}/server_helm_packages"
 
 # -------------------------------------------
 
@@ -107,6 +107,40 @@ _pct_exec_file() {
 }
 
 
+_read_helm_configurations_from_file() {
+  while read -r package_name \
+                helm_repo_url \
+                version \
+                service_to_check
+  do
+    if [[ ${package_name} == '#' ]] || [[ ${package_name} == '' ]]; then
+      continue
+    fi
+    echo "$package_name $helm_repo_url $version $service_to_check"
+  done < "${HELM_PACKAGES_CONFIG_PATH}"
+}
+
+_install_helm_packages() {
+  VMID=${1}
+
+  configuration=$(_read_helm_configurations_from_file)
+
+  while read -r package_name \
+                helm_repo_url \
+                version \
+                service_to_check
+  do
+    echo "[ SERVER ] Install ${package_name}"
+    _pct_exec_file "${VMID}" "install_helm_package.bash" \
+      "${package_name}" \
+      "${helm_repo_url}" \
+      "${version}"
+    echo "[ TEST ] Check ${package_name} service"
+    _pct_exec "${VMID}" "/usr/local/bin/kubectl get services | grep -q ${service_to_check}"
+    echo "[ --- ]"
+  done <<< ${configuration}
+}
+
 # -------------------------------------------
 # START THE PROVISIONING
 # -------------------------------------------
@@ -172,38 +206,5 @@ else
   echo "[ --- ] Reusing server ${VMID_SERVER} and agent ${VMID_AGENT}"
 fi
 
-echo "[ SERVER ] Install argo-cd"
-_pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
-  "argo-cd" \
-  "https://argoproj.github.io/argo-helm" \
-  "5.19.15"  # chart version 5.19.15 is argo v2.5.10
-echo "[ TEST ] Check argocd service"
-_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q argocd-server"
-echo "[ --- ]"
-# kubectl port-forward service/argco-argocd-server -n default 8080:443 --address='0.0.0.0'
-echo "[ SERVER ] Install harbor"
-# chart version 1.3.18 is harbor 1.10.17 the required in specs. However, all versions under
-# 1.6.0 fail to install on helm. 1.6.0 is harbor 2.2.0
-_pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
-   "harbor" \
-   "https://helm.goharbor.io" \
-   "1.6.0"
-echo "[ TEST ] Check harbor service"
-_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q harbor-portal"
-echo "[ --- ]"
-# kubectl port-forward service/harbor-portal -n default 88:80 --address='0.0.0.0'
-echo "[ SERVER ] Install prometheus"
-_pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
-  "prometheus" \
-  "https://prometheus-community.github.io/helm-charts" \
-  "20.2.1" # LTS not in the repo, use latest chart 20.2.1 is promethus v2.43.0
-echo "[ TEST ] Check promethus service"
-_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q prometheus"
-echo "[ SERVER ] Install grafana"
-_pct_exec_file ${VMID_SERVER} "install_helm_package.bash" \
-  "grafana" \
-  "https://grafana.github.io/helm-charts/" \
-  "6.54.0" # Chart version for 6.54.0 is app version 9.4.7
-echo "[ TEST ] Check promethus service"
-_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get services | grep -q grafana"
-echo "[ --- ]"
+# Install the helm packages in the server from the configuration file
+_install_helm_packages "${VMID_SERVER}"
