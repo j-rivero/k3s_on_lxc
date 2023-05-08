@@ -7,7 +7,6 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="
     --kube-apiserver-arg=feature-gates=KubeletInUserNamespace=true\
     --flannel-iface=eth0\
     --cluster-init\
-    --disable servicelb\
     --write-kubeconfig-mode '644'" sh -s -
 
 mkdir ~/.kube/
