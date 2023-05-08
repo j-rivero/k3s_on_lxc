@@ -201,6 +201,10 @@ if [[ ${USE_EXISTING_VMID} -eq 0 ]]; then
   if ${ALLOW_SSHD_ROOT}; then
     _allow_root_login "${VMID_SERVER}"
   fi
+  # Server tests to run
+  if ${TEST_TRAEFIK}; then
+    _pct_exec_file ${VMID_SERVER} "test_whoami_traefik.bash"
+  fi
 
   SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
   SERVER_IP=$(_pct_exec ${VMID_SERVER} "ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" true)

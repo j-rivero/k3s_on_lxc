@@ -22,4 +22,7 @@ export RAM=20000
 export DISK_GB=40
 export BASE_APT_PACKAGES="curl vim net-tools"
 export ALLOW_SSHD_ROOT=${ALLOW_SSHD_ROOT:-false}
+
+# testing options
+export TEST_TRAEFIK=${TEST_TRAEFIK:-false}
 # -------------------------------------------
