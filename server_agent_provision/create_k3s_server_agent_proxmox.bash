@@ -106,6 +106,12 @@ _pct_exec_file() {
   pct exec "${VMID}" -- rm "/tmp/${FILE_TO_EXEC}"
 }
 
+_allow_root_login() {
+  VMID=${1}
+
+  _pct_exec "${VMID}" "sed -i -e 's:^#PermitRootLogin.*:PermitRootLogin yes:' /etc/ssh/sshd_config"
+  _pct_exec "${VMID}" "systemctl restart sshd.service"
+}
 
 _read_helm_configurations_from_file() {
   while read -r package_name \
@@ -191,6 +197,10 @@ if [[ ${USE_EXISTING_VMID} -eq 0 ]]; then
   _pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get nodes > /dev/null 2>/dev/null"
   echo "[ TEST ] Check helm installation"
   _pct_exec ${VMID_SERVER} "/usr/local/bin/helm version > /dev/null"
+  # Custom service configurations
+  if ${ALLOW_SSHD_ROOT}; then
+    _allow_root_login "${VMID_SERVER}"
+  fi
 
   SERVER_TOKEN=$(_pct_exec ${VMID_SERVER} "cat /var/lib/rancher/k3s/server/node-token" true)
   SERVER_IP=$(_pct_exec ${VMID_SERVER} "ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" true)
