@@ -71,5 +71,3 @@ EOF3
 kubectl apply -f /tmp/03-whoami.yml \
               -f /tmp/03-whoami-services.yml \
               -f /tmp/04-whoami-ingress.yml
-
-curl -v http://localhost/
