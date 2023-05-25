@@ -83,3 +83,53 @@ _pct_exec_file() {
   fi
   pct exec "${VMID}" -- rm "/tmp/${FILE_TO_EXEC}"
 }
+
+#
+# Implement the hook_provision_platform:
+# create the LXC instances inside Proxmox to place agent-server
+#
+hook_provision_platform() {
+  if [[ ${USE_EXISTING_VMID} -gt 0 ]]; then
+    VMID_SERVER=${USE_EXISTING_VMID}
+    VMID_AGENT=$(( USE_EXISTING_VMID + 1 ))
+  else
+    # Defining machines in the cluster
+    VMID_SERVER=${POOL_VMID_STARTS_AT}
+    while pct config ${VMID_SERVER} > /dev/null 2> /dev/null; do
+      VMID_SERVER=$(( VMID_SERVER + 1 ))
+    done
+    VMID_AGENT=$(( VMID_SERVER +1 ))
+    while pct config ${VMID_AGENT} > /dev/null 2> /dev/null; do
+      VMID_AGENT=$(( VMID_AGENT + 1 ))
+    done
+  fi
+
+  CLUSTER_INSTANCES=()
+  CLUSTER_INSTANCES[VMID_SERVER]="cluster-k3s-server-${VMID_SERVER}"
+  CLUSTER_INSTANCES[VMID_AGENT]="cluster-k3s-agent-${VMID_SERVER}"
+
+  if [[ ${USE_EXISTING_VMID} -eq 0 ]]; then
+    # Base installation for all the instances
+    for VMID in "${!CLUSTER_INSTANCES[@]}"; do
+      HOSTNAME=${CLUSTER_INSTANCES[VMID]}
+      echo "[ --- ] Creating instance ${HOSTNAME} with ID ${VMID}"
+      echo "[ RUN ] Building the PVE instance"
+      _pct_create "${VMID}" "${HOSTNAME}"
+      echo "[ RUN ] Starting the PVE instance"
+      _pct_start "${VMID}"
+      echo "[ RUN ] Base packages installation"
+      _pct_exec "${VMID}" "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
+      _pct_exec "${VMID}" "locale-gen > /dev/null 2> /dev/null"
+      _pct_exec "${VMID}" "apt-get -qq update"
+      _pct_exec "${VMID}" "apt-get install -qq -o=Dpkg::User-Pty=0 -y ${BASE_APT_PACKAGES} > /dev/null"
+      echo "[ RUN ] Prepare for the k3s installation"
+      _pct_exec_file "${VMID}" "prepare_lxc_for_k3s.bash"
+      echo "[ --- ]"
+      echo
+    done
+  else
+    echo "[ --- ] Reusing server ${VMID_SERVER} and agent ${VMID_AGENT}"
+  fi
+
+  echo "${VMID_SERVER} ${VMID_AGENT}"
+}
