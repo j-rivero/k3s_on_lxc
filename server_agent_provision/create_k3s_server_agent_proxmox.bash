@@ -44,9 +44,10 @@ _allow_root_login() {
 #
 # 1. Create the VMs or system platforms
 
-ids=$(hook_provision_platform)
-VMID_SERVER="${ids% *}"
-VMID_AGENT="${ids#* }"
+export VMID_SERVER
+export VMID_AGENT
+
+hook_provision_platform
 
 # Server installation
 echo "[ --- ]"

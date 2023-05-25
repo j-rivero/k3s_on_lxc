@@ -130,6 +130,4 @@ hook_provision_platform() {
   else
     echo "[ --- ] Reusing server ${VMID_SERVER} and agent ${VMID_AGENT}"
   fi
-
-  echo "${VMID_SERVER} ${VMID_AGENT}"
 }
