@@ -5,8 +5,9 @@
 # on Proxmox LXCs.
 #
 
-source "${SCRIPT_DIR}/config_promox.bash"
-source ${SECRETS_FILE}
+export HOOKS_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source "${HOOKS_DIR}/config.bash"
+source "${HOOKS_DIR}/${SECRETS_FILE}"
 
 if [[ ! -f ${VZ_IMAGE} ]]; then
   echo "${VZ_IMAGE} not found in the filesystem"
