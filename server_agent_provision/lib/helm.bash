@@ -26,12 +26,12 @@ _install_helm_packages() {
                 service_to_check
   do
     echo "[ SERVER ] Install ${package_name}"
-    _pct_exec_file "${VMID}" "install_helm_package.bash" \
+    hook_exec_file "${VMID}" "install_helm_package.bash" \
       "${package_name}" \
       "${helm_repo_url}" \
       "${version}"
     echo "[ TEST ] Check ${package_name} service"
-    _pct_exec "${VMID}" "/usr/local/bin/kubectl get services | grep -q ${service_to_check}"
+    hook_exec "${VMID}" "/usr/local/bin/kubectl get services | grep -q ${service_to_check}"
     echo "[ --- ]"
   done <<< ${configuration}
 }

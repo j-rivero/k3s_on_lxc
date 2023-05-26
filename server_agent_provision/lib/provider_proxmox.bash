@@ -56,7 +56,12 @@ _pct_start() {
   return 0
 }
 
-_pct_exec() {
+#
+# Implement the exec and exec_file hook
+# For Proxmox system base use _pvt_ functqions
+#
+
+hook_exec() {
   local VMID=${1} CMD=${2} ENABLE_OUTPUT=${3:-false} ERR=false
 
   LOG=`pct exec "${VMID}" -- sh -c "${CMD}"` || ERR=true
@@ -70,7 +75,7 @@ _pct_exec() {
   return 0
 }
 
-_pct_exec_file() {
+hook_exec_file() {
   local VMID=${1} FILE_TO_EXEC=${2} ARG1=${3} ARG2=${4} ARG3=${5} ERR=false
 
   pct push "${VMID}" "files/${FILE_TO_EXEC}" "/tmp/${FILE_TO_EXEC}"
@@ -118,12 +123,12 @@ hook_provision_platform() {
       echo "[ RUN ] Starting the PVE instance"
       _pct_start "${VMID}"
       echo "[ RUN ] Base packages installation"
-      _pct_exec "${VMID}" "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
-      _pct_exec "${VMID}" "locale-gen > /dev/null 2> /dev/null"
-      _pct_exec "${VMID}" "apt-get -qq update"
-      _pct_exec "${VMID}" "apt-get install -qq -o=Dpkg::User-Pty=0 -y ${BASE_APT_PACKAGES} > /dev/null"
+      hook_exec "${VMID}" "sed -i -e 's:# en_US.UTF-8 UTF-8:en_US.UTF-8 UTF-8:' /etc/locale.gen"
+      hook_exec "${VMID}" "locale-gen > /dev/null 2> /dev/null"
+      hook_exec "${VMID}" "apt-get -qq update"
+      hook_exec "${VMID}" "apt-get install -qq -o=Dpkg::User-Pty=0 -y ${BASE_APT_PACKAGES} > /dev/null"
       echo "[ RUN ] Prepare for the k3s installation"
-      _pct_exec_file "${VMID}" "prepare_lxc_for_k3s.bash"
+      hook_exec_file "${VMID}" "prepare_lxc_for_k3s.bash"
       echo "[ --- ]"
       echo
     done
