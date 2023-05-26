@@ -93,7 +93,7 @@ hook_exec() {
 hook_exec_file() {
   local VMID=${1} FILE_TO_EXEC=${2} ARG1=${3} ARG2=${4} ARG3=${5} ERR=false
 
-  pct push "${VMID}" "files/${FILE_TO_EXEC}" "/tmp/${FILE_TO_EXEC}"
+  pct push "${VMID}" "${FILES_DIR}/${FILE_TO_EXEC}" "/tmp/${FILE_TO_EXEC}"
   pct exec "${VMID}" -- chmod +x "/tmp/${FILE_TO_EXEC}"
   LOG=`pct exec "${VMID}" -- "/tmp/${FILE_TO_EXEC}" "${ARG1}" "${ARG2}" "${ARG3}"` || ERR=true
   if $ERR; then

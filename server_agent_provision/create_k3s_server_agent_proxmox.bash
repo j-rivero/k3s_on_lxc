@@ -2,8 +2,10 @@
 
 set -e
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-LIB_DIR="${SCRIPT_DIR}/lib"
+export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+export LIB_DIR="${SCRIPT_DIR}/lib"
+export FILES_DIR="${SCRIPT_DIR}/files"
+
 PROVIDERS_LIB_DIR="${SCRIPT_DIR}/providers"
 PROVIDER=${PROVIDER:-proxmox_lxc}
 PROVIDER_DIR="${PROVIDERS_LIB_DIR}/${PROVIDER}"
@@ -33,7 +35,6 @@ _allow_root_login() {
 
 export VMID_SERVER
 export VMID_AGENT
-
 hook_provision_platform
 
 # Server installation
