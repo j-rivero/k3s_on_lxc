@@ -5,8 +5,23 @@
 # on Proxmox LXCs.
 #
 
+source "${SCRIPT_DIR}/config_promox.bash"
+source ${SECRETS_FILE}
+
+if [[ ! -f ${VZ_IMAGE} ]]; then
+  echo "${VZ_IMAGE} not found in the filesystem"
+  exit 1
+fi
+
+if [[ -z ${LXC_ROOT_PASS} ]]; then
+  echo "LXC_ROOT_PASS is empty. Set it in ${SECRETS_FILE} file"
+  exit 1
+fi
+
 _pct_create() {
   local VMID=${1} HOSTNAME=${2}
+
+  ${DEBUG} && pveam available
 
   LOG=$(pct create "${VMID}" "${VZ_IMAGE}" \
     --arch amd64 \

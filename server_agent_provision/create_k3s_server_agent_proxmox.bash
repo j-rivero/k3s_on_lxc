@@ -9,24 +9,7 @@ LIB_DIR="${SCRIPT_DIR}/lib"
 # Useful variables
 #
 DEBUG=${DEBUG:-false}
-source "${SCRIPT_DIR}/config.bash"
-HELM_PACKAGES_CONFIG_PATH="${SCRIPT_DIR}/server_helm_packages"
-
 # -------------------------------------------
-
-${DEBUG} && pveam available
-
-if [[ ! -f ${VZ_IMAGE} ]]; then
-  echo "${VZ_IMAGE} not found in the filesystem"
-  exit 1
-fi
-
-source ${SECRETS_FILE}
-
-if [[ -z ${LXC_ROOT_PASS} ]]; then
-  echo "LXC_ROOT_PASS is empty. Set it in ${SECRETS_FILE} file"
-  exit 1
-fi
 
 source "${LIB_DIR}/provider_proxmox.bash"
 source "${LIB_DIR}/helm.bash"

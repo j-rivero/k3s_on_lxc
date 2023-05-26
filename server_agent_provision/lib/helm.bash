@@ -2,6 +2,8 @@
 # Helm librariy to deal with helm installations
 #
 
+HELM_PACKAGES_CONFIG_PATH="${SCRIPT_DIR}/server_helm_packages"
+
 _read_helm_configurations_from_file() {
   while read -r package_name \
                 helm_repo_url \
