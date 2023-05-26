@@ -4,6 +4,10 @@ set -e
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 LIB_DIR="${SCRIPT_DIR}/lib"
+PROVIDERS_LIB_DIR="${SCRIPT_DIR}/providers"
+PROVIDER=${PROVIDER:-proxmox_lxc}
+PROVIDER_DIR="${PROVIDERS_LIB_DIR}/${PROVIDER}"
+PROVIDER_HOOK_FILE="${PROVIDER_DIR}/${PROVIDER}/hooks.bash"
 
 # -------------------------------------------
 # Useful variables
@@ -11,7 +15,7 @@ LIB_DIR="${SCRIPT_DIR}/lib"
 DEBUG=${DEBUG:-false}
 # -------------------------------------------
 
-source "${LIB_DIR}/provider_proxmox.bash"
+source "${PROVIDER_HOOK_FILE}"
 source "${LIB_DIR}/helm.bash"
 
 _allow_root_login() {
