@@ -9,7 +9,7 @@ export FILES_DIR="${SCRIPT_DIR}/files"
 PROVIDERS_LIB_DIR="${SCRIPT_DIR}/providers"
 PROVIDER=${PROVIDER:-proxmox_lxc}
 PROVIDER_DIR="${PROVIDERS_LIB_DIR}/${PROVIDER}"
-PROVIDER_HOOK_FILE="${PROVIDER_DIR}/${PROVIDER}/hooks.bash"
+PROVIDER_HOOK_FILE="${PROVIDER_DIR}/hooks.bash"
 
 # -------------------------------------------
 # Useful variables
