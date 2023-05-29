@@ -1,0 +1,27 @@
+name: Test debug provider
+
+on:
+  push:
+
+jobs:
+  run-shell-script:
+    runs-on: ubuntu-latest
+    env:
+      PROVIDER: debugger
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Run Shell Script
+      run: |
+        set -e
+        set +x
+        ./server_agent_provision/create_k3s_server_agent_proxmox.bash
+
+    - name: Display server/agent log files
+      run: |
+        echo "SERVER LOG"
+        cat /tmp/.k3_debugger_vmid_server
+        echo
+        echo "AGENT LOG"
+        cat /tmp/.k3_debugger_vmid_agent
