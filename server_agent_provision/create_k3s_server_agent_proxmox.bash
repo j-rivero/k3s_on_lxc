@@ -69,3 +69,17 @@ echo "[ --- ]"
 
 # Install the helm packages in the server from the configuration file
 _install_helm_packages "${VMID_SERVER}"
+
+echo "[---] INFO:"
+echo "SERVER_CLUSTER_IP is ${SERVER_IP}"
+if ${ALLOW_SSHD_ROOT}; then
+  echo "  ssh root@${SERVER_IP}"
+fi
+sleep 15
+EXTERNAL_IP=$(_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get svc -n ingress-nginx ingress-nginx-controller | tail -1 | awk '{ print \$4 }'" true)
+if  [[ ${EXTERNAL_IP} == "<pending>" ]]; then
+  echo "Waiting for LoadBalancer IP..."
+  sleep 60
+  EXTERNAL_IP=$(_pct_exec ${VMID_SERVER} "/usr/local/bin/kubectl get svc -n ingress-nginx ingress-nginx-controller | tail -1 | awk '{ print \$4 }'" true)
+fi
+echo "EXTERNAL_IP is ${EXTERNAL_IP}"
