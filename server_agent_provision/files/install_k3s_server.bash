@@ -1,13 +1,16 @@
 #!/bin/bash
 set -e
 
+# Be very carefull touching any space or scapes in this command since
+# it is easy that it ends up not generating a valid systemd file.
+# For debbuging: see /etc/systemd/system/k3s.service
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=" 
     --kubelet-arg=feature-gates=KubeletInUserNamespace=true\
     --kube-controller-manager-arg=feature-gates=KubeletInUserNamespace=true\
     --kube-apiserver-arg=feature-gates=KubeletInUserNamespace=true\
     --flannel-iface=eth0\
     --cluster-init\
-    --disable-traefik\
+    --disable traefik
     --write-kubeconfig-mode '644'" sh -s -
 
 mkdir ~/.kube/
