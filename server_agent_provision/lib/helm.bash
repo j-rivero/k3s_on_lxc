@@ -2,7 +2,7 @@
 # Helm librariy to deal with helm installations
 #
 
-HELM_PACKAGES_CONFIG_PATH="${SCRIPT_DIR}/server_helm_packages"
+HELM_PACKAGES_CONFIG_PATH="${SCRIPT_DIR}/helm"
 
 _read_helm_configurations_from_file() {
   while read -r package_name \
@@ -14,7 +14,7 @@ _read_helm_configurations_from_file() {
       continue
     fi
     echo "$package_name $helm_repo_url $version $service_to_check"
-  done < "${HELM_PACKAGES_CONFIG_PATH}"
+  done < "${HELM_PACKAGES_CONFIG_PATH}/server_packages"
 }
 
 _install_helm_packages() {
@@ -35,6 +35,14 @@ _install_helm_packages() {
     echo "[ TEST ] Check ${package_name} service"
     hook_exec "${VMID}" "/usr/local/bin/kubectl get services | grep -q ${service_to_check}"
     echo "[ --- ]"
+
+    configmap_filename="${package_name}-configmap.yml"
+    configmap_path="${HELM_PACKAGES_CONFIG_PATH}/${configmap_filename}"
+    remote_configmap_path="/tmp/${configmap_filename}"
+
+    if [[ -f ${configmap_path} ]]; then
+      hook_cp "${VMID}" "${configmap_path}" "${remote_configmap_path}"
+      hook_exec "${VMID}" "/usr/local/bin/kubectl apply -f ${remote_configmap_path}"
+    fi
   done <<< ${configuration}
 }
-

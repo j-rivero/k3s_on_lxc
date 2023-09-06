@@ -19,6 +19,12 @@ hook_exec() {
   return 0
 }
 
+hook_cp() {
+  local SYSTEM_FILE=${0} LOCAL_FILE=${1} REMOTE_FILE=${2}
+
+  echo "cp ${LOCAL_FILE} ${REMOTE_FILE}" >> ${SYSTEM_FILE}
+}
+
 hook_exec_file() {
   local SYSTEM_FILE=${1} FILE_TO_EXEC=${2} ARG1=${3} ARG2=${4} ARG3=${5} ERR=false
 

@@ -91,6 +91,12 @@ hook_exec() {
   return 0
 }
 
+hook_cp() {
+   local VMID=${1} LOCAL_FILE=${2} REMOTE_FILE=${3}
+
+   pct push "${VMID}" "${LOCAL_FILE}" "${REMOTE_FILE}"
+}
+
 hook_exec_file() {
   local VMID=${1} FILE_TO_EXEC=${2} ARG1=${3} ARG2=${4} ARG3=${5} ERR=false
 
