@@ -45,7 +45,7 @@ _install_helm_packages() {
 
     if [[ -f ${configmap_path} ]]; then
       hook_cp "${VMID}" "${configmap_path}" "${remote_configmap_path}"
-      hook_exec "${VMID}" "/usr/local/bin/kubectl apply -n $${namespace} -f ${remote_configmap_path}"
+      hook_exec "${VMID}" "/usr/local/bin/kubectl apply -n ${namespace} -f ${remote_configmap_path}"
     fi
   done <<< ${configuration}
 }
