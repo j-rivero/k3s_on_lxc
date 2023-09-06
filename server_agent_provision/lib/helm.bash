@@ -27,13 +27,16 @@ _install_helm_packages() {
                 version \
                 service_to_check
   do
+    # assume same rule than other bash files
+    namespace=${package_name/-/}
+
     echo "[ SERVER ] Install ${package_name}"
     hook_exec_file "${VMID}" "install_helm_package.bash" \
       "${package_name}" \
       "${helm_repo_url}" \
       "${version}"
     echo "[ TEST ] Check ${package_name} service"
-    hook_exec "${VMID}" "/usr/local/bin/kubectl get services | grep -q ${service_to_check}"
+    hook_exec "${VMID}" "/usr/local/bin/kubectl get services -n ${namespace} | grep -q ${service_to_check}"
     echo "[ --- ]"
 
     configmap_filename="${package_name}-configmap.yml"
@@ -42,7 +45,7 @@ _install_helm_packages() {
 
     if [[ -f ${configmap_path} ]]; then
       hook_cp "${VMID}" "${configmap_path}" "${remote_configmap_path}"
-      hook_exec "${VMID}" "/usr/local/bin/kubectl apply -f ${remote_configmap_path}"
+      hook_exec "${VMID}" "/usr/local/bin/kubectl apply -n $${namespace} -f ${remote_configmap_path}"
     fi
   done <<< ${configuration}
 }
