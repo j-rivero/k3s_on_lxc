@@ -7,14 +7,18 @@ if [[ $# -lt 2 ]]; then
 fi
 
 helm_package=${1}
+namespace=${helm_package/-/}
 helm_repository_url=${2}
-helm_repository_name=${helm_package}/${helm_package}
+helm_repository_name=${helm_package/-/}
+helm_install_name="${namespace}"
 version=${3}
 
 # install script need local bin in the path
 export PATH=$PATH:/usr/local/bin
 
-helm repo add "${helm_package}" "${helm_repository_url}"
+kubectl create namespace "${namespace}"
+
+helm repo add "${helm_repository_name}" "${helm_repository_url}"
 helm repo update
 
 if [[ ${version} ]]; then
@@ -27,4 +31,7 @@ if [[ "${status}" != "Error: release: not found" ]]; then
   helm uninstall "${helm_package}"
 fi
 
-helm install "${helm_package}" "${helm_repository_name}" "${version_str[@]}"
+helm install --namespace "${namespace}" \
+  "${helm_install_name}"\
+  "${helm_repository_name}/${helm_package}"\
+  "${version_str[@]}"
