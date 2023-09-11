@@ -37,6 +37,12 @@ of HELM packages:
 PROVIDER=proxmox_lxc USE_EXISTING_VMID=100 ./create_k3s_server_agent_proxmox.bash
 ```
 
+For development cases, the provisoning can install only the server if needed:
+```bash
+PROVIDER=proxmox_lxc ONLY_SERVER=true ./create_k3s_server_agent_proxmox.bash
+```
+
+
 ### Configuration
 
 Variables to customize the creation are stored in the [config file](providers/proxmox_lxc/config.bash)
