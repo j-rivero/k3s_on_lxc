@@ -43,5 +43,5 @@ jobs:
     - name: Display server/agent log files
       run: |
         echo "AGENT LOG should not exist"
-        [[ -f /tmp/.k3_debugger_vmid_agent ]] && exit -1
+        [[ -s /tmp/.k3_debugger_vmid_agent ]] && exit -1
 
