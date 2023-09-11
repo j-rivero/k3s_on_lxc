@@ -25,3 +25,23 @@ jobs:
         echo
         echo "AGENT LOG"
         cat /tmp/.k3_debugger_vmid_agent
+
+  setver-only:
+    runs-on: ubuntu-latest
+    env:
+      PROVIDER: debugger
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Run agent-only installation
+      run: |
+        set -e
+        set +x
+        ONLY_SERVER=! ./server_agent_provision/create_k3s_server_agent_proxmox.bash
+
+    - name: Display server/agent log files
+      run: |
+        echo "AGENT LOG should not exist"
+        [[ -f /tmp/.k3_debugger_vmid_agent ]] && exit -1
+
