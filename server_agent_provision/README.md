@@ -4,12 +4,6 @@ Minimal provisioner written in bash to setup a k3s server <-> agent
 installation in enviroments where other real provisioning tools can not
 be used.
 
-#### Helm packages in the Server
-
-For installing helm packages inside the server, the plain text configuration
-file [`server_helm_packages`](server_helm_packages) can be used. The format
-is described in the file.
-
 ## Proxmox k3s Server Agent Provision
 
 Simple bash provision script to be run on the Proxmox
@@ -18,10 +12,11 @@ host in order to create a Server and Agent k3s installation.
  * Create LXC instances in Proxmox
  * Install base packages in both instances
  * Install k3s server in one of the LXC
+ * Install/Test ingress controller (nginx-ingress by default) in the k3s server
  * Install k3s agent in the other LXC
  * Connect the k3s agent to the server as k3s node
 
-### Usage with proxmox_lxc
+## Usage with proxmox_lxc
 
 Set up the root password in the secret file and run the script.
 
@@ -41,6 +36,12 @@ For development cases, the provisoning can install only the server if needed:
 ```bash
 PROVIDER=proxmox_lxc ONLY_SERVER=true ./create_k3s_server_agent_proxmox.bash
 ```
+
+### Helm packages in the Server
+
+For installing helm packages inside the server, the plain text configuration
+file [`server_helm_packages`](server_helm_packages) can be used. The format
+is described in the file.
 
 
 ### Configuration

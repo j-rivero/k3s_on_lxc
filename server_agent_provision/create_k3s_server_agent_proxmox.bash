@@ -16,6 +16,8 @@ PROVIDER_HOOK_FILE="${PROVIDER_DIR}/hooks.bash"
 #
 ONLY_SERVER=${ONLY_SERVER:-false}
 DEBUG=${DEBUG:-false}
+# Mianly tested with nginx-ingrss or traefik
+INGRESS_CONTROLLER=${INGRESS_CONTROLLER:-nginx}
 # -------------------------------------------
 
 source "${PROVIDER_HOOK_FILE}"
@@ -53,7 +55,7 @@ if ${ALLOW_SSHD_ROOT}; then
   _allow_root_login "${VMID_SERVER}"
 fi
 # Server tests to run
-if ${TEST_TRAEFIK}; then
+if [[ ${INGRESS_CONTROLLER} == 'traefik' ]]; then
   hook_exec_file ${VMID_SERVER} "test_whoami_traefik.bash"
 fi
 
@@ -79,10 +81,13 @@ if ${ALLOW_SSHD_ROOT}; then
   echo "  ssh root@${SERVER_IP}"
 fi
 sleep 15
-EXTERNAL_IP=$(hook_exec ${VMID_SERVER} "/usr/local/bin/kubectl get svc -n ingress-nginx ingress-nginx-controller | tail -1 | awk '{ print \$4 }'" true)
-if  [[ ${EXTERNAL_IP} == "<pending>" ]]; then
-  echo "Waiting for LoadBalancer IP..."
-  sleep 60
+
+if [[ ${INGRESS_CONTROLLER} == "nginx" ]]; then
   EXTERNAL_IP=$(hook_exec ${VMID_SERVER} "/usr/local/bin/kubectl get svc -n ingress-nginx ingress-nginx-controller | tail -1 | awk '{ print \$4 }'" true)
+  if  [[ ${EXTERNAL_IP} == "<pending>" ]]; then
+    echo "Waiting for LoadBalancer IP..."
+    sleep 60
+    EXTERNAL_IP=$(hook_exec ${VMID_SERVER} "/usr/local/bin/kubectl get svc -n ingress-nginx ingress-nginx-controller | tail -1 | awk '{ print \$4 }'" true)
+  fi
+  echo "EXTERNAL_IP is ${EXTERNAL_IP}"
 fi
-echo "EXTERNAL_IP is ${EXTERNAL_IP}"
