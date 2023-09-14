@@ -21,7 +21,8 @@ host in order to create a Server and Agent k3s installation.
 Set up the root password in the secret file and run the script.
 
 ```bash
-echo 'LXC_ROOT_PASS=my_root_pass' > secret.bash
+cd server_agent_provision
+echo 'LXC_ROOT_PASS=my_root_pass' > ./providers/proxmox_lxc/secret.bash
 PROVIDER=proxmox_lxc POOL_VMID_START_AT=100 ./create_k3s_server_agent_proxmox.bash
 ```
 
